@@ -1,5 +1,0 @@
-services:
-  oidc:
-    build: .
-    ports:
-      - "9001:9001"

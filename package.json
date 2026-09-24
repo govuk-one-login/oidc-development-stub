@@ -3,30 +3,7 @@
   "description": "OIDC provider and consumer stubs for local development and testing",
   "version": "1.0.0",
   "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./consumer": {
-      "types": "./dist/consumer/create-consumer.d.ts",
-      "import": "./dist/consumer/create-consumer.js"
-    },
-    "./provider": {
-      "types": "./dist/provider/create-provider.d.ts",
-      "import": "./dist/provider/create-provider.js"
-    }
-  },
-  "files": [
-    "dist/index.*",
-    "dist/consumer",
-    "dist/provider"
-  ],
   "scripts": {
-    "build": "npm run copy-assets && tsc --project tsconfig.build.json",
-    "copy-assets": "mkdir -p provider/assets && rm -rf provider/assets/* && cp node_modules/govuk-frontend/dist/govuk/govuk-frontend.min.css provider/assets/ && cp node_modules/govuk-frontend/dist/govuk/govuk-frontend.min.js provider/assets/ && cp -r node_modules/govuk-frontend/dist/govuk/assets/* provider/assets/",
-    "prepublishOnly": "npm run build",
-    "start": "tsx app.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "lint": "eslint .",
@@ -41,8 +18,7 @@
     "koa-mount": "^4.2.0",
     "koa-static": "^5.0.0",
     "nunjucks": "^3.2.4",
-    "oidc-provider": "^9.12.2",
-    "openid-client": "^6.8.8"
+    "oidc-provider": "^9.12.2"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
