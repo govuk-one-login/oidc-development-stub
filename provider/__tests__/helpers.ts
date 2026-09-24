@@ -59,7 +59,7 @@ export function startProvider(
         // Update client redirect URIs to use the actual port
         const clients = config.clients.map((c) => ({
           ...c,
-          redirect_uris: c.redirect_uris?.map((uri:string) =>
+          redirect_uris: c.redirect_uris?.map((uri: string) =>
             uri.replace("localhost:0", `localhost:${port}`),
           ),
         }));

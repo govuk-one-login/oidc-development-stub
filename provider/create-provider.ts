@@ -129,10 +129,12 @@ export function createOidcProvider(config: OidcProviderConfig): NodeHandler {
 
   app.use(mount("/assets", serve(path.resolve("provider/assets"))));
 
-  app.use(nunjucksMiddleware({
-    autoescape: true,
-    noCache: process.env.NODE_ENV !== 'production',
-  }));
+  app.use(
+    nunjucksMiddleware({
+      autoescape: true,
+      noCache: process.env.NODE_ENV !== "production",
+    }),
+  );
 
   app.use(interactionRoutes(provider, accounts));
 

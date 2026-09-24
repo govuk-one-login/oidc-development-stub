@@ -33,11 +33,11 @@ export function interactionRoutes(
         {
           value: "",
           text: "N/A",
-          selected: true
+          selected: true,
         },
         ...accounts.map((account) => ({
           value: account.sub,
-          text: account.email
+          text: account.email,
         })),
       ];
 
@@ -75,7 +75,9 @@ export function interactionRoutes(
 
       // TODO: handle errors issued at token exchange or userinfo
       if (body.get("errorWhere") !== "authorize") {
-        throw new Error("Cannot return errors on token exchange or userinfo yet");
+        throw new Error(
+          "Cannot return errors on token exchange or userinfo yet",
+        );
       }
 
       await provider.interactionFinished(ctx.req, ctx.res, {

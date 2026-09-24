@@ -14,7 +14,9 @@ declare module "koa" {
   }
 }
 
-export const nunjucksMiddleware: (nunjucksOptions: ConfigureOptions) => Application.Middleware = (nunjucksOptions) => {
+export const nunjucksMiddleware: (
+  nunjucksOptions: ConfigureOptions,
+) => Application.Middleware = (nunjucksOptions) => {
   const nunjucksEnv = nunjucks.configure(VIEWS, nunjucksOptions);
   return async (ctx, next) => {
     ctx.render = async (view, context) => {
@@ -24,7 +26,7 @@ export const nunjucksMiddleware: (nunjucksOptions: ConfigureOptions) => Applicat
           if (err) {
             reject(err);
           } else {
-            ctx.type = 'text/html';
+            ctx.type = "text/html";
             ctx.body = content;
             resolve(content as string);
           }

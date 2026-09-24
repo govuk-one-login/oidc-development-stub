@@ -17,10 +17,7 @@ export type NodeHandler = (
  * Returns a plain Node HTTP handler. Routes are relative to wherever this handler is mounted.
  */
 export function createOidcConsumer(config: OidcConsumerConfig): NodeHandler {
-  const {
-    provider_url,
-    scope = "openid profile email",
-  } = config;
+  const { provider_url, scope = "openid profile email" } = config;
 
   /** In-memory store for pending auth flows, keyed by state */
   const pendingFlows = new Map<string, { codeVerifier: string }>();
@@ -30,18 +27,23 @@ export function createOidcConsumer(config: OidcConsumerConfig): NodeHandler {
 
   function getConfig(): Promise<client.Configuration> {
     if (!configPromise) {
-      configPromise = discoverWithRetry(provider_url, config.client_id, config.client_secret);
+      configPromise = discoverWithRetry(
+        provider_url,
+        config.client_id,
+        config.client_secret,
+      );
     }
     return configPromise;
   }
 
   return async (req, res) => {
-    if (!config.redirect_uris){
+    if (!config.redirect_uris) {
       res.writeHead(500, { "Content-Type": "text/plain" });
       res.end("Redirect URLs not configured");
       return;
     }
-    const postLogoutRedirectUri = config.post_logout_redirect_uris?.at(0) || undefined
+    const postLogoutRedirectUri =
+      config.post_logout_redirect_uris?.at(0) || undefined;
     const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
     const path = url.pathname;
     const method = req.method ?? "GET";
@@ -52,17 +54,34 @@ export function createOidcConsumer(config: OidcConsumerConfig): NodeHandler {
     }
 
     if (path === "/login" && method === "GET") {
-      await handleLogin(res, getConfig, config.redirect_uris[0], scope, pendingFlows);
+      await handleLogin(
+        res,
+        getConfig,
+        config.redirect_uris[0],
+        scope,
+        pendingFlows,
+      );
       return;
     }
 
     if (path === "/callback" && method === "GET") {
-      await handleCallback(url, res, getConfig, config.redirect_uris[0], pendingFlows);
+      await handleCallback(
+        url,
+        res,
+        getConfig,
+        config.redirect_uris[0],
+        pendingFlows,
+      );
       return;
     }
 
     if (path === "/logout" && method === "GET") {
-      await handleLogout(res, getConfig, config.client_id, postLogoutRedirectUri);
+      await handleLogout(
+        res,
+        getConfig,
+        config.client_id,
+        postLogoutRedirectUri,
+      );
       return;
     }
 
@@ -211,7 +230,7 @@ async function handleLogout(
 
     const url = new URL(endSessionUrl);
     url.searchParams.set("client_id", clientId);
-    if (postLogoutRedirectUri){
+    if (postLogoutRedirectUri) {
       url.searchParams.set("post_logout_redirect_uri", postLogoutRedirectUri);
     }
 
