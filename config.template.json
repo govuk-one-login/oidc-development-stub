@@ -1,0 +1,14 @@
+[
+  {
+    "client_id": "rpat",
+    "redirect_uris": ["http://localhost:9001/callback"],
+    "require_signed_request_object": false,
+    "post_logout_redirect_uris": ["http://localhost:9001/"],
+    "backchannel_logout_uri": "http://localhost:9001/backchannel-logout",
+    "jwks_uri": "http://localhost:9001/.well-known/jwks.json",
+    "request_object_signing_alg": "ES256",
+    "id_token_signed_response_alg": "ES256",
+    "grant_types": ["authorization_code", "refresh_token"],
+    "token_endpoint_auth_method": "private_key_jwt"
+  }
+]
