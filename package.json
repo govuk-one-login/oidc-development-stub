@@ -8,12 +8,14 @@
     "start:express:watch": "npx tsx watch --include './src/*' --env-file=.env src/server.ts",
     "start:sam:local": "sam local start-api --template build/oidc-stub/template.yaml --env-vars parameters.json -p 3002",
     "build:lambda": "sam build --template template.yaml --build-dir build/oidc-stub",
+    "build": "npx tsc",
     "test": "vitest run",
     "test:cov": "vitest run --coverage",
     "test:watch": "vitest",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "lint:fix": "eslint . && prettier --write ."
+    "lint:fix": "eslint . && prettier --write .",
+    "lint:check": "eslint . && prettier . --check"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1140.0",

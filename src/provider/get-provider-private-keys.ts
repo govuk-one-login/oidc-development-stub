@@ -1,7 +1,7 @@
 import { JWK, JWKS } from "oidc-provider";
 import { getEnv } from "../util/getEnv.js";
 import { importPKCS8, exportJWK } from "jose";
-import { createPublicKey, createHash } from "node:crypto";
+import { createPublicKey, createHash, KeyObject } from "node:crypto";
 import { isLocalEnv } from "../util/isLocalEnv.js";
 import {
   GetSecretValueCommand,
@@ -61,7 +61,7 @@ const convertPrivatePemToJwkWithKid = async (
   });
   const privateJwk = await exportJWK(privateKey);
   const kid = sha256(
-    createPublicKey(privateKey).export({
+    createPublicKey(KeyObject.from(privateKey)).export({
       type: "spki",
       format: "pem",
     })
