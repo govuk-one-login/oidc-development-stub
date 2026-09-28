@@ -100,7 +100,6 @@ export function createOidcProvider(config: OidcProviderConfig): NodeHandler {
     },
 
     pkce: {
-      methods: ["S256"],
       required: () => true,
     },
 
