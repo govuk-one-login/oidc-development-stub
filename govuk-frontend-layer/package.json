@@ -1,0 +1,7 @@
+{
+  "name": "govuk-frontend-layer",
+  "version": "1.0.0",
+  "dependencies": {
+    "govuk-frontend": "^6.5.1"
+  }
+}
