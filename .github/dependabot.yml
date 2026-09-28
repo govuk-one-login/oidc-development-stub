@@ -9,6 +9,11 @@ updates:
       all-dependencies:
         patterns:
           - "*"
+    ignore:
+      # Not currently compatible with ESLint yet
+      - dependency-name: typescript
+        versions:
+          - ">=7, <8"
 
   - package-ecosystem: docker
     directory: /
