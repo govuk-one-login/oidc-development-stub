@@ -13,3 +13,5 @@ services:
       retries: 10
     volumes:
       - ./scripts/:/etc/floci/init/ready.d
+      - ./config.local.json:/etc/floci/init/data/config.local.json:ro
+      - ./.env:/etc/floci/init/data/.env
