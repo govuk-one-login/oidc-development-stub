@@ -85,5 +85,6 @@ export const createOidcProvider = async (): Promise<Provider> => {
   configureNunjucks(provider);
   const interactionRouter = createInteractionRoutes(provider);
   provider.use(interactionRouter.routes());
+  provider.proxy = true;
   return provider;
 };

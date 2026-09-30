@@ -18,6 +18,6 @@ export const createApp = async (): Promise<Express> => {
     app.use("/assets", express.static(path.join("/opt", "assets")));
   }
   app.use(oidcProvider.callback());
-
+  app.set("trust proxy", true);
   return app;
 };
