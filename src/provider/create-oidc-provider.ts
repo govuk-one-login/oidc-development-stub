@@ -40,6 +40,7 @@ export const createOidcProvider = async (): Promise<Provider> => {
       IdToken: (): number => 180, // 3 mins,
       Interaction: (): number => 900, // 15 mins,
       RefreshToken: (): number => 180, // 3 mins,
+      Grant: (): number => 900, // 15 mins
     },
     findAccount: (_ctx, id): CanBePromise<Account | undefined> => {
       const account = accounts.find((a) => a.sub === id);
