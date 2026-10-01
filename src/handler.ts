@@ -1,30 +1,29 @@
 import { configure } from "@codegenie/serverless-express";
 import {
   APIGatewayProxyEvent,
-  Handler,
   APIGatewayProxyResult,
+  Context,
 } from "aws-lambda";
 import { createApp } from "./app.js";
 
-type ApiGatewayHandler = Handler<
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult | void
->;
+type ApiGatewayHandler = (
+  event: APIGatewayProxyEvent,
+  context: Context
+) => Promise<APIGatewayProxyResult>;
 
 let serverlessExpressInstance: ApiGatewayHandler;
 
-const setup: ApiGatewayHandler = async (event, context, callback) => {
+const setup: ApiGatewayHandler = async (event, context) => {
   const app = await createApp();
-  serverlessExpressInstance = configure<
-    APIGatewayProxyEvent,
-    APIGatewayProxyResult
-  >({ app });
-  return serverlessExpressInstance(event, context, callback);
+  serverlessExpressInstance = configure({
+    app,
+  }) as unknown as ApiGatewayHandler;
+  return serverlessExpressInstance(event, context);
 };
 
-export const handler: ApiGatewayHandler = (event, context, callback) => {
+export const handler: ApiGatewayHandler = (event, context) => {
   if (serverlessExpressInstance) {
-    return serverlessExpressInstance(event, context, callback);
+    return serverlessExpressInstance(event, context);
   }
-  return setup(event, context, callback);
+  return setup(event, context);
 };
