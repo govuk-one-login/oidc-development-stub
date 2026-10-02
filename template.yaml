@@ -1,0 +1,184 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: Generic OIDC stub running in a lambda
+
+Parameters:
+  Environment:
+    Type: String
+    Description: The name of the environment to deploy to
+    AllowedValues:
+      - dev
+      - build
+  CodeSigningConfigArn:
+    Type: String
+    Description: The ARN of the Code Signing Config to use, provided by the deployment pipeline
+    Default: none
+  PermissionsBoundary:
+    Type: String
+    Description: The ARN of the permissions boundary to apply when creating IAM roles
+    Default: none
+  VpcStackName:
+    Type: String
+    Description: The name of the stack used to create the VPC
+
+Conditions:
+  UseCodeSigning: !Not [!Equals [none, !Ref CodeSigningConfigArn]]
+  UsePermissionsBoundary: !Not [!Equals [none, !Ref PermissionsBoundary]]
+  IsLocalEnv: !Equals [!Ref Environment, local]
+
+Globals:
+  Function:
+    CodeSigningConfigArn: !If
+      - UseCodeSigning
+      - !Ref CodeSigningConfigArn
+      - !Ref AWS::NoValue
+    PermissionsBoundary: !If
+      - UsePermissionsBoundary
+      - !Ref PermissionsBoundary
+      - !Ref AWS::NoValue
+
+Resources:
+  OidcStubApiGateway:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub ${Environment}-OidcStubApiGateway
+      StageName: prod
+      AlwaysDeploy: true
+
+  OidcStubViewsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: oidc-stub-nunjucks-templates
+      Description: Nunjucks templates for OIDC interaction views
+      ContentUri: ./src/views
+      CompatibleRuntimes:
+        - nodejs24.x
+
+  GovUkFrontendLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: oidc-stub-govuk-frontend
+      Description: govuk-frontend for OIDC stub interaction views
+      ContentUri: ./govuk-frontend-layer
+      CompatibleRuntimes:
+        - nodejs24.x
+    Metadata:
+      BuildMethod: nodejs24.x
+
+  OidcStubAssetsLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: oidc-stub-assests
+      Description: Static assets for oidc stub views
+      ContentUri: ./public
+      CompatibleRuntimes:
+        - nodejs24.x
+
+  OidcStubLambdaFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: .
+      Handler: "src/handler.handler"
+      Runtime: nodejs24.x
+      Layers:
+        - !Ref OidcStubViewsLayer
+        - !Ref GovUkFrontendLayer
+        - !Ref OidcStubAssetsLayer
+      Architectures:
+        - arm64
+      Environment:
+        Variables:
+          ENVIRONMENT: !Sub ${Environment}
+          # These will always be over-written when running locally in parameters.json
+          FLOCI_ENDPOINT: !If [IsLocalEnv, "", !Ref AWS::NoValue]
+          PROVIDER_ISSUER: !If [IsLocalEnv, "", !Ref AWS::NoValue]
+      Policies: []
+      # TODO: Add table and secret policies
+      Events:
+        RootPath:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OidcStubApiGateway
+            Path: /
+            Method: ANY
+        ProxyPath:
+          Type: Api
+          Properties:
+            RestApiId: !Ref OidcStubApiGateway
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints:
+          - src/handler.ts
+        Minify: true
+        Sourcemap: true
+        Target: es2022
+        UseNpmCi: True
+
+  OidcStubKmsKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: KMS Customer Managed Key for node-oidc-provider DynamoDB table
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: Enable IAM User Permissions
+            Effect: Allow
+            Principal:
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
+            Action: "kms:*"
+            Resource: "*"
+
+  OidcKmsKeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/${Environment}-oidc-stub-data-key"
+      TargetKeyId: !Ref OidcKmsKey
+
+  # DynamoDB Table
+  OidcDynamoDbTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${Environment}-oidc-stub-data
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: userCode
+          AttributeType: S
+        - AttributeName: uid
+          AttributeType: S
+        - AttributeName: grantId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      GlobalSecondaryIndexes:
+        - IndexName: userCode-index
+          KeySchema:
+            - AttributeName: userCode
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: uid-index
+          KeySchema:
+            - AttributeName: uid
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+        - IndexName: grantId-index
+          KeySchema:
+            - AttributeName: grantId
+              KeyType: HASH
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+        SSEType: KMS
+        KMSMasterKeyId: !Ref OidcKmsKeyAlias
