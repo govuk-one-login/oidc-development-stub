@@ -67,3 +67,5 @@ and to start sam local run this command:
 ```sh
 npm run start:sam:local
 ```
+
+When running in SAM local, form submissions and redirects may be auto upgraded to https, so you may encounter a TLS error. To fix this, you will need to manually downgrade the scheme in the URL.
