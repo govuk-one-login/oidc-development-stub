@@ -16,7 +16,7 @@ const defaultVitestRules: Partial<RulesConfig> = {
   "no-undef": "off",
 };
 export default defineConfig(
-  globalIgnores([".gitignore", "coverage", "public", "build"]),
+  globalIgnores([".gitignore", "coverage", "public", "build", "scripts"]),
   {
     languageOptions: {
       ecmaVersion: "latest",

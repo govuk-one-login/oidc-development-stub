@@ -4,9 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "start:express": "npx tsx --env-file=.env src/server.ts",
+    "start:express": "npm run createAuthRequest && npx tsx --env-file=.env src/server.ts",
     "start:express:watch": "npx tsx watch --include './src/*' --env-file=.env src/server.ts",
-    "start:sam:local": "sam local start-api --template build/oidc-stub/template.yaml --env-vars parameters.json -p 3002",
+    "start:sam:local": "npm run createAuthRequest && sam local start-api --template build/oidc-stub/template.yaml --env-vars parameters.json -p 3002",
     "build:lambda": "sam build --template template.yaml --build-dir build/oidc-stub",
     "build": "npx tsc",
     "test": "vitest run",
@@ -17,7 +17,8 @@
     "lint:fix": "eslint . && prettier --write .",
     "lint:check": "eslint . && prettier . --check",
     "localstack:up": "docker compose -f docker-compose.yaml up -d",
-    "localstack:down": "docker compose -f docker-compose.yaml down"
+    "localstack:down": "docker compose -f docker-compose.yaml down",
+    "createAuthRequest": "node scripts/create-auth-request.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.1140.0",
