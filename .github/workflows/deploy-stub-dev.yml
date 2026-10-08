@@ -1,0 +1,23 @@
+name: Deploy oidc stub RPAT Dev
+
+permissions:
+  id-token: write
+  contents: read
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sam-validate:
+    uses: ./.github/workflows/sam-validate.yml
+    secrets:
+      SAM_APP_VALIDATE_ROLE_ARN: ${{ secrets.RPAT_DEV_SAM_APP_VALIDATE_ROLE_ARN }}
+
+  deploy-oidc-stub-dev:
+    uses: ./.github/workflows/deploy-stubs.yml
+    needs: run-checks
+    secrets:
+      GH_ACTIONS_ROLE_ARN: ${{ secrets.RPAT_DEV_STUB_GH_ACTIONS_ROLE_ARN }}
+      ARTIFACT_BUCKET_NAME: ${{ secrets.RPAT_DEV_STUB_ARTIFACT_BUCKET_NAME }}
+      SIGNING_PROFILE_NAME: ${{ secrets.RPAT_DEV_SIGNING_PROFILE_NAME }}
+      WORKING_DIRECTORY: build/oidc-stub
