@@ -94,6 +94,7 @@ Resources:
           PROVIDER_ISSUER: !If [IsLocalEnv, "", !Ref AWS::NoValue]
       Policies:
         - !Ref OidcStubTableReadWriteDeleteAccessPolicy
+        - !Ref OidcStubSecretAccessPolicy
       Events:
         RootPath:
           Type: Api
@@ -210,3 +211,17 @@ Resources:
               - kms:Decrypt
             Resource:
               - !GetAtt OidcStubKmsKey.Arn
+
+  OidcStubSecretAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowGetStubConfigSecrets
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Environment}-oidc-provider-ec-signing-key-*"
+              - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Environment}-oidc-stub-client-config-*"
