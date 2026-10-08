@@ -1,88 +1,71 @@
 # OIDC Development Stub
 
-> **Important** - This is currently in active development, and even when its done, this is **not** intended for production workflows.
+This is an OIDC provider stub that allows mocking out OIDC interactions using the [node-oidc-provider](https://github.com/panva/node-oidc-provider) package. This stub runs as an express application locally and when deployed as an AWS lambda function with an API gateway with a proxy configuration. For persistence storage of OIDC data, this uses DyanmoDB.
 
-Tooling for creating an OIDC stub service for development. Currently a work in progress, but there's two things here:
+## Getting started
 
-- An npm module (not currently published) at [`index.ts`](./index.ts), which exposes HTTP middleware for a development OIDC provider, and consumer.
-- An example server with both of them bundled together, in [`app.ts`](./app.ts), which is also packaged for Docker.
+This project uses pre-commit hooks to ensure linting and code formatting is ran before each commit, and can be setup by running the following command:
 
-## Quick Start
-
-```bash
-npm i
-npm start
+```sh
+pre-commit install
 ```
 
-Or with Docker:
+Once this is done, dependencies can be installed by running the following command:
 
-```bash
-docker compose up
+```sh
+npm ci
 ```
 
-This starts a server on http://localhost:9001. Visiting the root redirects to the consumer UI.
+## Running locally
 
-- **Consumer** — http://localhost:9001/consumer/ (relying party that displays token claims)
-- **Provider** — http://localhost:9001 (OIDC identity provider, serves discovery + auth endpoints)
+Because the stub is an express app mounted via an AWS lambda function, there are a couple of ways to run it locally.
 
-Click "Login with OIDC" on the consumer page to run the full authorization code + PKCE flow.
+To get started with either local running mode, make a copy of the `.env.example` file and create a valid EC signing key, populating the env var `LOCAL_PROVIDER_EC_SIGNING_KEY` with the PEM encoded private key in PKCS#8 format. Note this should include new lines:
 
-## Architecture
-
-A Koa app in `app.ts` routes by path prefix:
-
-- `/consumer/` — delegated to `createOidcConsumer`, an `openid-client` v6 relying party with PKCE
-- Everything else — delegated to `createOidcProvider`, an `oidc-provider` instance with an account picker interaction
-
-Both modules export a `NodeHandler` factory that returns a `(req, res) => Promise<void>` handler.
-
-## Client Configuration
-
-The consumer is pre-registered with the provider:
-
-- **Client ID:** `consumer`
-- **Client Secret:** `consumer-secret`
-- **Redirect URI:** `http://localhost:9001/consumer/callback`
-- **Scopes:** `openid profile email`
-
-This config is stored locally in `config.local.json`. There is an example configuration in the repo called `config.template.json`. You need to copy and rename this file in order to run the app locally.
-
-When run in a deployed state, it will look for the secret `${process.env.ENVIRONMENT}-stub-client-config` and import the config from that secret
-
-## Adapter Configuration
-
-By default the provider uses an in-memory store (state is lost on restart). For Lambda or multi-instance deployments, use the DynamoDB adapter:
-
-```typescript
-createOidcProvider({
-  issuer: "https://auth.example.com",
-  accounts,
-  clients,
-  adapter: {
-    type: "dynamodb",
-    tableName: "oidc-sessions",
-    clientConfig: { region: "eu-west-1" },
-  },
-});
+```
+LOCAL_PROVIDER_EC_SIGNING_KEY="-----BEGIN PRIVATE KEY-----
+include
+new
+lines
+-----END PRIVATE KEY-----"
 ```
 
-### DynamoDB Table (CloudFormation)
+Once this `.env` is populated, spin up the floci container the following command:
 
-When running this in a Lambda, storing state in-memory will cause issues every time the service restarts. For that reason, there's a DynamoDB store provided - setup is pretty minimal. The simplified setup does full table scans, rather than adding GSIs, so won't scale to high numbers of users.
-
-```yaml
-OidcSessionsTable:
-  Type: AWS::DynamoDB::Table
-  Properties:
-    TableName: oidc-sessions
-    BillingMode: PAY_PER_REQUEST
-    AttributeDefinitions:
-      - AttributeName: pk
-        AttributeType: S
-    KeySchema:
-      - AttributeName: pk
-        KeyType: HASH
-    TimeToLiveSpecification:
-      AttributeName: expiresAt
-      Enabled: true
+```sh
+npm run localstack:up
 ```
+
+### Client Config
+
+To update the configured clients, copy the `config.template.json` into a file called `config.local.json`. This will be used when running locally to setup the registered clients of the stub.
+
+### 1: Running the express server directly
+
+This is best for local development and should be how the application is ran most of the time. To run this, copy the `.env.example` to `.env` and generate a PEM formatted EC signing key for the application to use. Ensure the key is formatted in PKCS#8 format. Running in this mode will use the local client configuration defined in `config.local.json`.
+
+To start the express server run the following command:
+
+```sh
+npm run start:express
+```
+
+### 2: Running using SAM local
+
+Running in this mode is best for fully replicating what the deployed environment looks like. This will build the lambda function and layers according to the `template.yaml` file.
+
+To run in this mode set the following value in your `.env` file: `ENVIRONMENT=sam-local`
+
+To build the lambda and layer run the following command:
+
+```sh
+npm run build:lambda
+```
+
+and to start sam local run this command:
+
+```sh
+npm run start:sam:local
+```
+
+When running in SAM local, form submissions and redirects may be auto upgraded to https, so you may encounter a TLS error. To fix this, you will need to manually downgrade the scheme in the URL.

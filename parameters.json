@@ -1,0 +1,7 @@
+{
+  "Parameters": {
+    "ENVIRONMENT": "sam-local",
+    "PROVIDER_ISSUER": "http://localhost:3002",
+    "FLOCI_ENDPOINT": "http://host.docker.internal:4566"
+  }
+}
