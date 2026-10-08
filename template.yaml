@@ -92,8 +92,8 @@ Resources:
           # These will always be over-written when running locally in parameters.json
           FLOCI_ENDPOINT: !If [IsLocalEnv, "", !Ref AWS::NoValue]
           PROVIDER_ISSUER: !If [IsLocalEnv, "", !Ref AWS::NoValue]
-      Policies: []
-      # TODO: Add table and secret policies
+      Policies:
+        - !Ref OidcStubTableReadWriteDeleteAccessPolicy
       Events:
         RootPath:
           Type: Api
@@ -136,7 +136,7 @@ Resources:
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !Sub "alias/${Environment}-oidc-stub-data-key"
-      TargetKeyId: !Ref OidcKmsKey
+      TargetKeyId: !Ref OidcStubKmsKey
 
   # DynamoDB Table
   OidcDynamoDbTable:
@@ -181,4 +181,32 @@ Resources:
       SSESpecification:
         SSEEnabled: true
         SSEType: KMS
-        KMSMasterKeyId: !Ref OidcKmsKeyAlias
+        KMSMasterKeyId: !Ref OidcStubKmsKey
+
+  OidcStubTableReadWriteDeleteAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowReadWriteDeleteItemAccess
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource:
+              - !GetAtt OidcDynamoDbTable.Arn
+              - !Sub "${OidcDynamoDbTable.Arn}/index/*"
+          - Sid: AllowCrossBrowserTableKeyAccess
+            Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+            Resource:
+              - !GetAtt OidcStubKmsKey.Arn
