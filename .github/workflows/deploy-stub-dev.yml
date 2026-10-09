@@ -15,7 +15,7 @@ jobs:
 
   deploy-oidc-stub-dev:
     uses: ./.github/workflows/deploy-stubs.yml
-    needs: run-checks
+    needs: sam-validate
     secrets:
       GH_ACTIONS_ROLE_ARN: ${{ secrets.RPAT_DEV_STUB_GH_ACTIONS_ROLE_ARN }}
       ARTIFACT_BUCKET_NAME: ${{ secrets.RPAT_DEV_STUB_ARTIFACT_BUCKET_NAME }}
