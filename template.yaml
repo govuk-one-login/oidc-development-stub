@@ -37,6 +37,14 @@ Globals:
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
 
+Mappings:
+  EnvironmentConfiguration:
+    dev:
+      domainName: "oidc-stub.manage.development.sign-in.service.gov.uk"
+    build:
+      domainName: "oidc-stub.manage.build.sign-in.service.gov.uk"
+
+
 Resources:
   OidcStubApiGateway:
     Type: AWS::Serverless::Api
@@ -91,7 +99,9 @@ Resources:
           ENVIRONMENT: !Sub ${Environment}
           # These will always be over-written when running locally in parameters.json
           FLOCI_ENDPOINT: !If [IsLocalEnv, "", !Ref AWS::NoValue]
-          PROVIDER_ISSUER: !If [IsLocalEnv, "", !Ref AWS::NoValue]
+          PROVIDER_ISSUER: !Sub
+            - 'https://${Domain}'
+            - Domain: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
       Policies:
         - !Ref OidcStubTableReadWriteDeleteAccessPolicy
         - !Ref OidcStubSecretAccessPolicy
