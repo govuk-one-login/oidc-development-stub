@@ -56,4 +56,3 @@ repos:
           - npm run lint:fix
         language: system
         pass_filenames: false
-        files: ^.*\.ts$

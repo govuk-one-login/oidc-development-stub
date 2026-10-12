@@ -44,7 +44,6 @@ Mappings:
     build:
       domainName: "oidc-stub.manage.build.sign-in.service.gov.uk"
 
-
 Resources:
   OidcStubApiGateway:
     Type: AWS::Serverless::Api
@@ -100,8 +99,13 @@ Resources:
           # These will always be over-written when running locally in parameters.json
           FLOCI_ENDPOINT: !If [IsLocalEnv, "", !Ref AWS::NoValue]
           PROVIDER_ISSUER: !Sub
-            - 'https://${Domain}'
-            - Domain: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+            - "https://${Domain}"
+            - Domain:
+                !FindInMap [
+                  EnvironmentConfiguration,
+                  !Ref Environment,
+                  domainName,
+                ]
       Policies:
         - !Ref OidcStubTableReadWriteDeleteAccessPolicy
         - !Ref OidcStubSecretAccessPolicy
@@ -242,17 +246,18 @@ Resources:
     Type: AWS::CertificateManager::Certificate
     Properties:
       DomainName:
-        !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
       DomainValidationOptions:
         - DomainName:
-            !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+            !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
           HostedZoneId: !ImportValue hosted-zone-HostedZoneID # Stack name hardcoded from here: https://github.com/govuk-one-login/relying-party-admin-tool/blob/main/infra/hosted_zone.tf#L2
       ValidationMethod: DNS
 
   OidcStubApiDomain:
     Type: AWS::ApiGateway::DomainName
     Properties:
-      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+      DomainName:
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
       SecurityPolicy: TLS_1_2
       RegionalCertificateArn: !Ref OidcStubCertificate
       EndpointConfiguration:
@@ -262,7 +267,8 @@ Resources:
   OidcStubApiMapping:
     Type: AWS::ApiGateway::BasePathMapping
     Properties:
-      DomainName: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
+      DomainName:
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
       RestApiId: !Ref OidcStubApiGateway
       Stage: prod
     DependsOn:
@@ -272,8 +278,8 @@ Resources:
     Type: AWS::Route53::RecordSet
     Properties:
       Type: A
-      Name: !FindInMap [ EnvironmentConfiguration, !Ref Environment, domainName ]
-      HostedZoneId:  !ImportValue hosted-zone-HostedZoneID # Stack name hardcoded from here: https://github.com/govuk-one-login/relying-party-admin-tool/blob/main/infra/hosted_zone.tf#L2
+      Name: !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
+      HostedZoneId: !ImportValue hosted-zone-HostedZoneID # Stack name hardcoded from here: https://github.com/govuk-one-login/relying-party-admin-tool/blob/main/infra/hosted_zone.tf#L2
       AliasTarget:
         DNSName: !GetAtt OidcStubApiDomain.RegionalDomainName
         HostedZoneId: !GetAtt OidcStubApiDomain.RegionalHostedZoneId

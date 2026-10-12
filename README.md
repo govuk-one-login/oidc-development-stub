@@ -29,6 +29,7 @@ new
 lines
 -----END PRIVATE KEY-----"
 ```
+
 To generate a valid EC signing key, you can run the following command:
 
 ```
@@ -79,7 +80,7 @@ When running in SAM local, form submissions and redirects may be auto upgraded t
 
 To run this stub in a deployed environment, you will need to setup two secrets per env. One of these contains the EC signing key, and another holds the client configuration. These have the following names:
 
- - `${ENVRIONMENT}-oidc-provider-ec-signing-key`
- - `${ENVRIONMENT}-oidc-stub-client-config`
+- `${ENVRIONMENT}-oidc-provider-ec-signing-key`
+- `${ENVRIONMENT}-oidc-stub-client-config`
 
- Once these are setup, you can deploy the stub to your chosen environment.
+Once these are setup, you can deploy the stub to your chosen environment.
