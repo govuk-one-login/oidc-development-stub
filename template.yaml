@@ -37,6 +37,13 @@ Globals:
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
 
+Mappings:
+  EnvironmentConfiguration:
+    dev:
+      domainName: "oidc-stub.manage.development.sign-in.service.gov.uk"
+    build:
+      domainName: "oidc-stub.manage.build.sign-in.service.gov.uk"
+
 Resources:
   OidcStubApiGateway:
     Type: AWS::Serverless::Api
@@ -91,9 +98,17 @@ Resources:
           ENVIRONMENT: !Sub ${Environment}
           # These will always be over-written when running locally in parameters.json
           FLOCI_ENDPOINT: !If [IsLocalEnv, "", !Ref AWS::NoValue]
-          PROVIDER_ISSUER: !If [IsLocalEnv, "", !Ref AWS::NoValue]
-      Policies: []
-      # TODO: Add table and secret policies
+          PROVIDER_ISSUER: !Sub
+            - "https://${Domain}"
+            - Domain:
+                !FindInMap [
+                  EnvironmentConfiguration,
+                  !Ref Environment,
+                  domainName,
+                ]
+      Policies:
+        - !Ref OidcStubTableReadWriteDeleteAccessPolicy
+        - !Ref OidcStubSecretAccessPolicy
       Events:
         RootPath:
           Type: Api
@@ -136,7 +151,7 @@ Resources:
     Type: AWS::KMS::Alias
     Properties:
       AliasName: !Sub "alias/${Environment}-oidc-stub-data-key"
-      TargetKeyId: !Ref OidcKmsKey
+      TargetKeyId: !Ref OidcStubKmsKey
 
   # DynamoDB Table
   OidcDynamoDbTable:
@@ -181,4 +196,90 @@ Resources:
       SSESpecification:
         SSEEnabled: true
         SSEType: KMS
-        KMSMasterKeyId: !Ref OidcKmsKeyAlias
+        KMSMasterKeyId: !Ref OidcStubKmsKey
+
+  OidcStubTableReadWriteDeleteAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: AllowReadWriteDeleteItemAccess
+            Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+              - dynamodb:DeleteItem
+              - dynamodb:BatchGetItem
+              - dynamodb:BatchWriteItem
+              - dynamodb:Query
+              - dynamodb:Scan
+            Resource:
+              - !GetAtt OidcDynamoDbTable.Arn
+              - !Sub "${OidcDynamoDbTable.Arn}/index/*"
+          - Sid: AllowTableKeyAccess
+            Effect: Allow
+            Action:
+              - kms:Encrypt
+              - kms:Decrypt
+            Resource:
+              - !GetAtt OidcStubKmsKey.Arn
+
+  OidcStubSecretAccessPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: AllowGetStubConfigSecrets
+            Effect: Allow
+            Action:
+              - secretsmanager:GetSecretValue
+            Resource:
+              - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Environment}-oidc-provider-ec-signing-key-*"
+              - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Environment}-oidc-stub-client-config-*"
+
+  # Domain Config
+
+  OidcStubCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName:
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
+      DomainValidationOptions:
+        - DomainName:
+            !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
+          HostedZoneId: !ImportValue hosted-zone-HostedZoneID # Stack name hardcoded from here: https://github.com/govuk-one-login/relying-party-admin-tool/blob/main/infra/hosted_zone.tf#L2
+      ValidationMethod: DNS
+
+  OidcStubApiDomain:
+    Type: AWS::ApiGateway::DomainName
+    Properties:
+      DomainName:
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
+      SecurityPolicy: TLS_1_2
+      RegionalCertificateArn: !Ref OidcStubCertificate
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+
+  OidcStubApiMapping:
+    Type: AWS::ApiGateway::BasePathMapping
+    Properties:
+      DomainName:
+        !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
+      RestApiId: !Ref OidcStubApiGateway
+      Stage: prod
+    DependsOn:
+      - OidcStubApiDomain
+
+  OidcStubDnsRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      Type: A
+      Name: !FindInMap [EnvironmentConfiguration, !Ref Environment, domainName]
+      HostedZoneId: !ImportValue hosted-zone-HostedZoneID # Stack name hardcoded from here: https://github.com/govuk-one-login/relying-party-admin-tool/blob/main/infra/hosted_zone.tf#L2
+      AliasTarget:
+        DNSName: !GetAtt OidcStubApiDomain.RegionalDomainName
+        HostedZoneId: !GetAtt OidcStubApiDomain.RegionalHostedZoneId

@@ -30,6 +30,12 @@ lines
 -----END PRIVATE KEY-----"
 ```
 
+To generate a valid EC signing key, you can run the following command:
+
+```
+openssl genpkey -algorithm EC -pkeyopt ec_paramgen_curve:prime256v1
+```
+
 Once this `.env` is populated, spin up the floci container the following command:
 
 ```sh
@@ -69,3 +75,12 @@ npm run start:sam:local
 ```
 
 When running in SAM local, form submissions and redirects may be auto upgraded to https, so you may encounter a TLS error. To fix this, you will need to manually downgrade the scheme in the URL.
+
+## Deploying
+
+To run this stub in a deployed environment, you will need to setup two secrets per env. One of these contains the EC signing key, and another holds the client configuration. These have the following names:
+
+- `${ENVRIONMENT}-oidc-provider-ec-signing-key`
+- `${ENVRIONMENT}-oidc-stub-client-config`
+
+Once these are setup, you can deploy the stub to your chosen environment.
