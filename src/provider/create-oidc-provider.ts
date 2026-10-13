@@ -42,6 +42,12 @@ export const createOidcProvider = async (): Promise<Provider> => {
       RefreshToken: (): number => 180, // 3 mins,
       Grant: (): number => 900, // 15 mins
     },
+    subjectTypes: ["pairwise"],
+    clientAuthMethods: [
+      "private_key_jwt",
+      // client_secret_post
+    ],
+    responseTypes: ["code"],
     findAccount: (_ctx, id): CanBePromise<Account | undefined> => {
       const account = accounts.find((a) => a.sub === id);
       if (!account) return undefined;
