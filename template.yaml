@@ -82,17 +82,17 @@ Resources:
         - nodejs24.x
 
   OidcStubLambdaFunction:
-    Type: AWS::Serverless::Function
+    Type: AWS::Serverless::WebFunction
     Properties:
-      CodeUri: .
-      Handler: "src/handler.handler"
+      CodeUri: ./src
       Runtime: nodejs24.x
+      AutoDeploymentMode: LatestRevision
       Layers:
         - !Ref OidcStubViewsLayer
         - !Ref GovUkFrontendLayer
         - !Ref OidcStubAssetsLayer
-      Architectures:
-        - arm64
+      AuthType: IamAuth # ensure this requires IAM authorisation to invoke
+      EndpointType: HomeRegion # Only stick to this region!
       Environment:
         Variables:
           ENVIRONMENT: !Sub ${Environment}
@@ -109,19 +109,6 @@ Resources:
       Policies:
         - !Ref OidcStubTableReadWriteDeleteAccessPolicy
         - !Ref OidcStubSecretAccessPolicy
-      Events:
-        RootPath:
-          Type: Api
-          Properties:
-            RestApiId: !Ref OidcStubApiGateway
-            Path: /
-            Method: ANY
-        ProxyPath:
-          Type: Api
-          Properties:
-            RestApiId: !Ref OidcStubApiGateway
-            Path: /{proxy+}
-            Method: ANY
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
