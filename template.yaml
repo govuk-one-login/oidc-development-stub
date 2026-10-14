@@ -131,6 +131,9 @@ Resources:
         Sourcemap: true
         Target: es2022
         UseNpmCi: True
+        Format: esm
+        Banner:
+          js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);"
 
   OidcStubKmsKey:
     Type: AWS::KMS::Key
