@@ -1,29 +1,13 @@
-import { configure } from "@codegenie/serverless-express";
-import {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-  Context,
-} from "aws-lambda";
 import { createApp } from "./app.js";
 
-type ApiGatewayHandler = (
-  event: APIGatewayProxyEvent,
-  context: Context
-) => Promise<APIGatewayProxyResult>;
+const app = await createApp();
 
-let serverlessExpressInstance: ApiGatewayHandler;
+// AWS_LAMBDA_HTTP_ENDPOINT is set by the execution env
+// if not set we can use localhost on port 3002
+const [host, port] = (
+  process.env.AWS_LAMBDA_HTTP_ENDPOINT || "127.0.0.1:3002"
+).split(":");
 
-const setup: ApiGatewayHandler = async (event, context) => {
-  const app = await createApp();
-  serverlessExpressInstance = configure({
-    app,
-  }) as unknown as ApiGatewayHandler;
-  return serverlessExpressInstance(event, context);
-};
-
-export const handler: ApiGatewayHandler = (event, context) => {
-  if (serverlessExpressInstance) {
-    return serverlessExpressInstance(event, context);
-  }
-  return setup(event, context);
-};
+app.listen(Number(port), host, () => {
+  console.log(`Server is running at http://${host}:${port}`);
+});
