@@ -53,19 +53,18 @@ Resources:
       AutoDeploymentMode: LatestRevision
       AuthType: IamAuth # ensure this requires IAM authorisation to invoke
       EndpointType: HomeRegion # Only stick to this region!
-      Environment:
-        Variables:
-          ENVIRONMENT: !Sub ${Environment}
-          # These will always be over-written when running locally in parameters.json
-          FLOCI_ENDPOINT: !If [IsLocalEnv, "", !Ref AWS::NoValue]
-          PROVIDER_ISSUER: !Sub
-            - "https://${Domain}"
-            - Domain:
-                !FindInMap [
-                  EnvironmentConfiguration,
-                  !Ref Environment,
-                  domainName,
-                ]
+      EnvironmentVariables:
+        ENVIRONMENT: !Sub ${Environment}
+        # These will always be over-written when running locally in parameters.json
+        FLOCI_ENDPOINT: !If [IsLocalEnv, "", !Ref AWS::NoValue]
+        PROVIDER_ISSUER: !Sub
+          - "https://${Domain}"
+          - Domain:
+              !FindInMap [
+                EnvironmentConfiguration,
+                !Ref Environment,
+                domainName,
+              ]
       Policies:
         - !Ref OidcStubTableReadWriteDeleteAccessPolicy
         - !Ref OidcStubSecretAccessPolicy
