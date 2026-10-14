@@ -53,6 +53,7 @@ Resources:
       AutoDeploymentMode: LatestRevision
       AuthType: IamAuth # ensure this requires IAM authorisation to invoke
       EndpointType: HomeRegion # Only stick to this region!
+      ExecutionRoleArn: !GetAtt OidcStubFunctionExecutionRole.Arn
       EnvironmentVariables:
         ENVIRONMENT: !Sub ${Environment}
         # These will always be over-written when running locally in parameters.json
@@ -65,10 +66,23 @@ Resources:
                 !Ref Environment,
                 domainName,
               ]
+              
+  OidcStubFunctionExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${AWS::StackName}-web-function-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+               - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
       Policies:
         - !Ref OidcStubTableReadWriteDeleteAccessPolicy
         - !Ref OidcStubSecretAccessPolicy
-
   OidcStubKmsKey:
     Type: AWS::KMS::Key
     Properties:
