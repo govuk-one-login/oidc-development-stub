@@ -6,11 +6,11 @@ const __dirname = import.meta.dirname;
 
 export const configureNunjucks = (provider: Provider): void => {
   // /opt is the dir used for lambda layers
-  const viewsDir = isLocalEnv() ? path.join(__dirname, "..", "views") : "/opt";
+  const viewsDir = isLocalEnv() ? path.join(__dirname, "..", "views") : path.join(process.cwd(), 'views');
 
   const govukFrontendViews = isLocalEnv()
     ? path.resolve("node_modules/govuk-frontend/dist/")
-    : path.join("/opt", "nodejs", "node_modules/govuk-frontend/dist/");
+    : path.join(process.cwd(), 'node_modules/govuk-frontend/dist/');
 
   nunjucks.configure([viewsDir, govukFrontendViews], {
     autoescape: true,

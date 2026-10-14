@@ -45,45 +45,12 @@ Mappings:
       domainName: "oidc-stub.manage.build.sign-in.service.gov.uk"
 
 Resources:
-  OidcStubViewsLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: oidc-stub-nunjucks-templates
-      Description: Nunjucks templates for OIDC interaction views
-      ContentUri: ./src/views
-      CompatibleRuntimes:
-        - nodejs24.x
-
-  GovUkFrontendLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: oidc-stub-govuk-frontend
-      Description: govuk-frontend for OIDC stub interaction views
-      ContentUri: ./govuk-frontend-layer
-      CompatibleRuntimes:
-        - nodejs24.x
-    Metadata:
-      BuildMethod: nodejs24.x
-
-  OidcStubAssetsLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: oidc-stub-assests
-      Description: Static assets for oidc stub views
-      ContentUri: ./public
-      CompatibleRuntimes:
-        - nodejs24.x
-
   OidcStubLambdaFunction:
     Type: AWS::Serverless::WebFunction
     Properties:
       CodeUri: ../../dist/
       Runtime: nodejs24.x
       AutoDeploymentMode: LatestRevision
-      Layers:
-        - !Ref OidcStubViewsLayer
-        - !Ref GovUkFrontendLayer
-        - !Ref OidcStubAssetsLayer
       AuthType: IamAuth # ensure this requires IAM authorisation to invoke
       EndpointType: HomeRegion # Only stick to this region!
       Environment:
