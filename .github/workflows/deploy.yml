@@ -59,7 +59,7 @@ jobs:
           aws-region: eu-west-2
 
       - name: Deploy SAM app
-        uses: govuk-one-login/devplatform-upload-action@9320b8e71484f79c1b48139a86d214473d0f2709 # v4.3.0
+        uses: govuk-one-login/devplatform-upload-action@853cb428e93baa6e3bd72eff38e4d29aa352d336  # Custom one that supports webfn
         with:
           artifact-bucket-name: ${{ secrets.ARTIFACT_BUCKET_NAME }}
           signing-profile-name: ${{ secrets.SIGNING_PROFILE_NAME }}
