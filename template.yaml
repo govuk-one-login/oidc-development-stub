@@ -210,3 +210,9 @@ Resources:
             Resource:
               - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Environment}-oidc-provider-ec-signing-key-*"
               - !Sub "arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${Environment}-oidc-stub-client-config-*"
+
+
+Outputs:
+  DirectEndpointDomain:
+    Description: Web Function Domain (Must be authorised to access)
+    Value: !GetAtt OidcStubLambdaFunction.DomainName
