@@ -84,7 +84,7 @@ Resources:
   OidcStubLambdaFunction:
     Type: AWS::Serverless::WebFunction
     Properties:
-      CodeUri: ./src
+      CodeUri: dist/
       Runtime: nodejs24.x
       AutoDeploymentMode: LatestRevision
       Layers:
@@ -109,18 +109,6 @@ Resources:
       Policies:
         - !Ref OidcStubTableReadWriteDeleteAccessPolicy
         - !Ref OidcStubSecretAccessPolicy
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        EntryPoints:
-          - src/handler.ts
-        Minify: true
-        Sourcemap: true
-        Target: es2022
-        UseNpmCi: True
-        Format: esm
-        Banner:
-          js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);"
 
   OidcStubKmsKey:
     Type: AWS::KMS::Key
