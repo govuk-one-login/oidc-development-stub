@@ -15,7 +15,7 @@ export const createApp = async (): Promise<Express> => {
   if (isLocalEnv()) {
     app.use(express.static(path.join(__dirname, "./../public")));
   } else {
-    app.use("/assets", express.static(path.join("/opt", "assets")));
+     app.use(express.static(path.join(process.cwd(), './public/assets')));
   }
   app.use(oidcProvider.callback());
   app.set("trust proxy", true);
