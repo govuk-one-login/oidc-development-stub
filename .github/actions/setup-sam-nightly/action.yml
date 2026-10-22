@@ -1,0 +1,49 @@
+name: "Install Rain"
+description: "Downloads and installs the AWS CloudFormation Rain CLI tool with SHA256 integrity verification"
+
+inputs:
+  version:
+    description: "Rain version to install (e.g. v1.23.0)"
+    required: true
+  arch:
+    description: "Architecture string (e.g. linux-amd64)"
+    required: true
+  sha256:
+    description: "Expected SHA256 hash of the zip file for integrity verification"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Get nightly build and verify SHA256
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        curl -L -o aws-sam-cli-linux-x86_64.zip "https://github.com/aws/aws-sam-cli/releases/download/sam-cli-nightly/aws-sam-cli-linux-x86_64.zip"
+        EXPECTED_HASH="babdd29a5dce4da5ee1e827446878b85c61aa1325269fde2240368c9b1e49c5a" # hardcoded from https://github.com/aws/aws-sam-cli/releases#release-sam-cli-nightly
+
+        echo "Verifying SHA256 checksum..."
+        echo "Computing actual SHA256 hash..."
+        ACTUAL_HASH=$(sha256sum aws-sam-cli-linux-x86_64.zip | awk '{print $1}')
+
+        echo "Expected: $EXPECTED_HASH"
+        echo "Actual:   $ACTUAL_HASH"
+
+        if [ "$EXPECTED_HASH" != "$ACTUAL_HASH" ]; then
+            echo "Error: Integrity verification failed! Hashes do not match."
+            exit 1
+        else
+            echo "Integrity verification passed successfully."
+        fi
+    - name: Install SAM CLI
+      shell: bash
+      run: |
+        set -euo pipefail
+        echo "Unzipping the installer..."
+        unzip -q aws-sam-cli-linux-x86_64.zip -d sam-installation
+
+        echo "Running the installer..."
+        sudo ./sam-installation/install
+        alias sam="/usr/local/bin/sam-nightly"
+        sam --version
