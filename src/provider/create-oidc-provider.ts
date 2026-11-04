@@ -2,7 +2,7 @@ import Provider, {
   Account,
   AccountClaims,
   CanBePromise,
-  Grant,
+  Grant
 } from "oidc-provider";
 import { accounts } from "../accounts/accounts.js";
 import { createDynamoDbAdapter } from "../adapter/create-dynamo-adapter.js";
@@ -11,6 +11,7 @@ import { configureNunjucks } from "../nunjucks/configureNunjucks.js";
 import { createInteractionRoutes } from "../ui/interactionRoutes.js";
 import { getEnv } from "../util/getEnv.js";
 import { getProviderPrivateKeys } from "./get-provider-private-keys.js";
+import { isLocalEnv } from "../util/isLocalEnv.js";
 
 export const createOidcProvider = async (): Promise<Provider> => {
   const clients = await getClientConfig();
@@ -28,6 +29,7 @@ export const createOidcProvider = async (): Promise<Provider> => {
     },
     features: {
       devInteractions: { enabled: false },
+      requestObjects: { enabled: true },
     },
 
     pkce: {
@@ -88,8 +90,25 @@ export const createOidcProvider = async (): Promise<Provider> => {
       await grant.save();
       return grant;
     },
+    fetch: async (url, options) => {
+      const fetchOptions: any = { ...options };
+      if(isLocalEnv()){
+      // Only do this in the local env as the package
+      // attaches a custom dispatcher to all requests
+      // which blocks local/private reservered IPs
+      // to prevent SSRF. This blocks localhost 
+      // which blocks running locally when fetching our 
+      // JWKS endpoint
+        delete fetchOptions.dispatcher
+      } 
+      return fetch(url, fetchOptions);
+    },
   });
   configureNunjucks(provider);
+  provider.on("server_error", (ctx, err) => {
+    console.error(`Error on path ${ctx.path}`)
+    console.error(`Error: ${err}`)
+  })
   const interactionRouter = createInteractionRoutes(provider);
   provider.use(interactionRouter.routes());
   provider.proxy = true;
