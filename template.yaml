@@ -36,6 +36,8 @@ Globals:
       - UsePermissionsBoundary
       - !Ref PermissionsBoundary
       - !Ref AWS::NoValue
+    Timeout: 30
+    MemorySize: 512
 
 Mappings:
   EnvironmentConfiguration:
