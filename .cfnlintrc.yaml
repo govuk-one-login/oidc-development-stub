@@ -1,0 +1,3 @@
+ignore_checks:
+  - E3724 # false positive as CodeSigningConfigArn is a supported global
+
