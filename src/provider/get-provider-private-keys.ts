@@ -70,6 +70,6 @@ const convertPrivatePemToJwkWithKid = async (
   return privateJwk;
 };
 
-const sha256 = (content: string): string => {
+export const sha256 = (content: string): string => {
   return createHash("sha256").update(content).digest("hex");
 };

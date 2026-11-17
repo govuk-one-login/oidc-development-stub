@@ -4,8 +4,9 @@ Description: Generic OIDC stub running in a lambda
 
 Metadata:
   cfn-lint:
-    ignore_checks:
-      - E3724 # false positive as CodeSigningConfigArn is a supported global
+    config:
+      ignore_checks:
+        - E3724 # false positive as CodeSigningConfigArn is a supported global
 
 Parameters:
   Environment:
@@ -134,7 +135,7 @@ Resources:
       BuildProperties:
         EntryPoints:
           - src/handler.ts
-        Minify: true
+        Minify: false
         Sourcemap: true
         Target: es2022
         UseNpmCi: True

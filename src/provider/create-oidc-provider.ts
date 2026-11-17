@@ -10,7 +10,7 @@ import { getClientConfig } from "../client/get-client-config.js";
 import { configureNunjucks } from "../nunjucks/configureNunjucks.js";
 import { createInteractionRoutes } from "../ui/interactionRoutes.js";
 import { getEnv } from "../util/getEnv.js";
-import { getProviderPrivateKeys } from "./get-provider-private-keys.js";
+import { getProviderPrivateKeys, sha256 } from "./get-provider-private-keys.js";
 import { isLocalEnv } from "../util/isLocalEnv.js";
 
 export const createOidcProvider = async (): Promise<Provider> => {
@@ -36,13 +36,14 @@ export const createOidcProvider = async (): Promise<Provider> => {
       required: (): true => true,
     },
     ttl: {
-      Session: (): number => 1800, // 30 mins
-      AccessToken: (): number => 180, // 3 mins
-      AuthorizationCode: (): number => 300, // 5 mins
-      IdToken: (): number => 180, // 3 mins,
-      Interaction: (): number => 900, // 15 mins,
-      RefreshToken: (): number => 180, // 3 mins,
-      Grant: (): number => 900, // 15 mins
+      Session: 1800, // 30 mins
+      AccessToken: 180, // 3 mins
+      AuthorizationCode: 300, // 5 mins
+      IdToken: 180, // 3 mins,
+      Interaction: 900, // 15 mins,
+      RefreshToken: 180, // 3 mins,
+      Grant: 900, // 15 mins
+      ClientCredentials: 3 * 60, // 3 mins
     },
     subjectTypes: ["pairwise"],
     clientAuthMethods: [
@@ -106,6 +107,9 @@ export const createOidcProvider = async (): Promise<Provider> => {
       newHeaders.append("User-Agent", "RpAdminOidcStub");
       fetchOptions.headers = newHeaders;
       return fetch(url, fetchOptions);
+    },
+    pairwiseIdentifier: (_ctx, accountId, client): string => {
+      return `urn:stub-id:${sha256(`${accountId}:${client.clientId}`)}`;
     },
   });
   configureNunjucks(provider);
