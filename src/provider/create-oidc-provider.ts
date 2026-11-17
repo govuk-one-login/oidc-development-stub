@@ -13,6 +13,8 @@ import { getEnv } from "../util/getEnv.js";
 import { getProviderPrivateKeys, sha256 } from "./get-provider-private-keys.js";
 import { isLocalEnv } from "../util/isLocalEnv.js";
 
+const SCOPES = ["openid", "email"];
+
 export const createOidcProvider = async (): Promise<Provider> => {
   const clients = await getClientConfig();
   const providerKeys = await getProviderPrivateKeys();
@@ -34,6 +36,10 @@ export const createOidcProvider = async (): Promise<Provider> => {
 
     pkce: {
       required: (): true => true,
+    },
+    claims: {
+      openid: ["sub"],
+      email: ["email", "email_verified"],
     },
     ttl: {
       Session: 1800, // 30 mins
@@ -62,6 +68,7 @@ export const createOidcProvider = async (): Promise<Provider> => {
             sub: account.sub,
             name: account.name,
             email: account.email,
+            email_verified: account.email_verified,
           };
 
           const extra =
@@ -87,7 +94,7 @@ export const createOidcProvider = async (): Promise<Provider> => {
         clientId: oidc.client!.clientId,
       });
 
-      grant.addOIDCScope("openid");
+      SCOPES.forEach((scope) => grant.addOIDCScope(scope));
       await grant.save();
       return grant;
     },
@@ -104,7 +111,7 @@ export const createOidcProvider = async (): Promise<Provider> => {
       }
 
       const newHeaders = new Headers(fetchOptions.headers);
-      newHeaders.append("User-Agent", "RpAdminOidcStub");
+      newHeaders.append("User-Agent", "OidcStub");
       fetchOptions.headers = newHeaders;
       return fetch(url, fetchOptions);
     },

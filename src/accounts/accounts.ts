@@ -6,17 +6,20 @@ export const accounts = [
     email: "alice@example.com",
     tokenClaims: { role: "admin", department: "engineering" },
     userinfoClaims: { phone: "+1-555-0101", address: "123 Main St" },
+    email_verified: true,
   },
   {
     sub: "bob-001",
     name: "Bob Jones",
     email: "bob@example.com",
     userinfoClaims: { phone: "+1-555-0102", address: "456 Oak Ave" },
+    email_verified: true,
   },
   {
     sub: "charlie-001",
     name: "Charlie Brown",
     email: "charlie@example.com",
     tokenClaims: { role: "editor", department: "design" },
+    email_verified: true,
   },
 ];
