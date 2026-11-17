@@ -119,9 +119,13 @@ export function createDynamoDbAdapter(): AdapterConstructor {
         new UpdateCommand({
           TableName: tableName,
           Key: { pk: this.key(id) },
-          UpdateExpression: "SET payload.consumed = :consumed",
+          UpdateExpression: "SET #payload.#consumed = :consumed",
           ExpressionAttributeValues: {
             ":consumed": Math.floor(Date.now() / 1000),
+          },
+          ExpressionAttributeNames: {
+            "#payload": "payload",
+            "#consumed": "consumed",
           },
         })
       );
