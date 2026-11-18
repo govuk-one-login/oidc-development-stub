@@ -2,7 +2,7 @@ services:
   floci:
     image: floci/floci:latest-compat@sha256:bb98b11f837bdacdda21ce6635a0773509e50aa471c35be9332a9efef502127c
     ports:
-      - "4566:4566"
+      - "4567:4566"
     environment:
       - SERVICES=dynamodb,secretsmanager
       - AWS_DEFAULT_REGION=eu-west-2
